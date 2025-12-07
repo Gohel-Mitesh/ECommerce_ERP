@@ -1,0 +1,22 @@
+/* Custom styles goes here */
+/*select2 default styleshit for drop down*/
+.select2-container--default .select2-selection--single {
+    height: 37.6px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 5px !important;
+    padding: 6px 12px !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    color: #495057 !important;
+    background-color: #fff !important;
+    line-height: 1.5 !important;
+}
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 0 !important;
+        /*color: #a9aeb4 !important;*/
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+    }

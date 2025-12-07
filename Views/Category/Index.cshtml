@@ -1,0 +1,157 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "_ContentNavbarLayout";
+    ViewData["Title"] = "List Category";
+}
+
+<link rel="stylesheet" href="~/Admin/css/datatable.css" />
+
+<div class="container mt-3 p-0">
+    <table id="categoryTable" class="display table caption-top table-nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <th>Categories</th>
+                <th>Category Description</th>
+                <th>Category Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+@section PageScripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#categoryTable').DataTable({
+                "processing": true,
+                "serverSide": false,
+                "ajax": "/Category/GetCategories",
+                "dataSrc": "data",
+                "columns": [
+                    { "data": "categoryTitle", "autoWidth": true },
+                    { "data": "categoryDescription", "autoWidth": true },
+                    {
+                        "data": "categoryStatus",
+                        "render": function (data) {
+                            let statusClass = "";
+                            let statusText = "";
+
+                            switch (data) {
+                                case "Inactive":
+                                    statusClass = "badge bg-label-danger";
+                                    statusText = "Inactive";
+                                    break;
+                                case "Scheduled":
+                                    statusClass = "badge bg-label-warning";
+                                    statusText = "Scheduled";
+                                    break;
+                                case "Publish":
+                                    statusClass = "badge bg-label-success";
+                                    statusText = "Publish";
+                                    break;
+                                default:
+                                    statusClass = "badge bg-label-secondary";
+                                    statusText = "Unknown";
+                                    break;
+                            }
+
+                            return `<span class="${statusClass}" style="font-size: 12px; padding: 6px 10px;">${statusText}</span>`;
+                        }, "autoWidth": true
+                    },
+                    {
+                        "data": "categoryId",
+                        "render": function (data) {
+                            return `
+                                <a href="/Category/Edit/${data}" class="btn btn-icon"><i class="bx bx-edit bx-md"></i></a>
+                                <button class="btn btn-icon delete-category" data-id="${data}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            `;
+                        }, "autoWidth": true
+                    }
+                ],
+                dom: "<'row'<'col-sm-6 d-flex align-items-center'<'custom-search-box'>><'col-sm-6 d-flex justify-content-end'<'custom-length-menu' l><'custom-export-button' B><'custom-add-button'>>>" +
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                lengthMenu: [
+                    [7, 10, 25, 50, -1],
+                    ['7', '10', '25', '50', 'All']
+                ],
+                buttons: [
+                    {
+                        extend: 'collection',
+                        text: '<i class="bx bx-export"></i> Export',
+                        className: 'btn btn-light export-dropdown',
+                        buttons: [
+                            { extend: 'print', text: '<i class="fa fa-print"></i> Print', className: 'dropdown-item' },
+                            { extend: 'csvHtml5', text: '<i class="fa fa-file-csv"></i> CSV', className: 'dropdown-item' },
+                            { extend: 'excelHtml5', text: '<i class="fa fa-file-excel"></i> Excel', className: 'dropdown-item' },
+                            { extend: 'pdfHtml5', text: '<i class="fa fa-file-pdf"></i> PDF', className: 'dropdown-item' },
+                            { extend: 'copyHtml5', text: '<i class="fa fa-copy"></i> Copy', className: 'dropdown-item' }
+                        ]
+                    }
+                ],
+                initComplete: function () {
+                    // Corrected Table Reference
+                    var table = $('#categoryTable').DataTable();
+
+                    // ✅ Fix: Custom Search Box Now Works
+                    $(".custom-search-box").html('<input type="text" class="form-control" id="customSearchBox" placeholder="Search Category">');
+                    $("#customSearchBox").on('keyup', function () {
+                        table.search(this.value).draw();
+                    });
+
+                    // ✅ Fix: Custom Length Selector Works
+                    $(".custom-length-menu").html(`
+                        <select class="form-select form-control" id="custom-length">
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="-1">All</option>
+                        </select>
+                    `);
+
+                    $("#custom-length").on('change', function () {
+                        table.page.len($(this).val()).draw();
+                    });
+
+                    // ✅ Fix: Properly Redirects to Add Category Page
+                    $(".custom-add-button").html(`
+                        <a href="/Category/CategoryForm" class="btn btn-primary" id="addCategoryBtn">
+                            + Add Category
+                        </a>
+                    `);
+                }
+            });
+
+            // ✅ Fix: Corrected Delete Category Function
+            $(document).on("click", ".delete-category", function () {
+                let categoryId = $(this).data("id");
+
+                if (confirm("Are you sure you want to delete this category?")) {
+                    $.ajax({
+                        url: `/Category/Delete/${categoryId}`,
+                        type: "DELETE",
+                        success: function (response) {
+                            if (response.success) {
+                                alert("Category deleted successfully!");
+                                $('#categoryTable').DataTable().ajax.reload();
+                            } else {
+                                alert("Error: " + response.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Failed to delete the category.");
+                        }
+                    });
+                }
+            });
+
+        });
+
+    </script>
+}

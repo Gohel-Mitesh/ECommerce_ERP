@@ -1,0 +1,709 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "_ContentNavbarLayout";
+    ViewData["Title"] = "Add Product";
+}
+@model ECommerce_ERP.Models.ProductFormViewModel
+@section PageScripts {
+    <script src="~/Admin/js/form-basic-inputs.js"></script>
+    <script type="text/javascript">
+        const uploadBox = document.getElementById("uploadBox");
+        const fileInput = document.getElementById("fileInput");
+        const browseButton = document.getElementById("browseButton");
+        const previewContainer = document.getElementById("previewContainer");
+        const previewImage = document.getElementById("previewImage");
+        const fileName = document.getElementById("fileName");
+        const fileSize = document.getElementById("fileSize");
+        const progressContainer = document.getElementById("progressContainer");
+        const progressBar = document.getElementById("progressBar");
+        const previewContainerCard = document.getElementById("previewContainerCard");
+
+        function simulateUpload(file) {
+            progressContainer.style.display = "block";
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressContainer.style.display = "none";
+                    previewContainer.style.display = "block";
+                }
+            }, 200);
+        }
+
+        // fileInput.addEventListener("change", () => {
+        //     const file = fileInput.files[0];
+        //     if (file) {
+        //         const reader = new FileReader();
+        //         reader.onload = (e) => {
+        //             previewImage.src = e.target.result;
+        //         };
+        //         reader.readAsDataURL(file);
+
+        //         fileName.textContent = file.name;
+        //         fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+        //         uploadBox.style.display = "none";
+        //         simulateUpload(file);
+        //     }
+        // });
+
+        document.getElementById("fileInput").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Set the preview image source to the uploaded file
+                    document.getElementById("previewImage").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Update file name and size
+                document.getElementById("fileName").textContent = file.name;
+                document.getElementById("fileSize").textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+
+                // Hide upload box and show the preview card
+                document.getElementById("uploadBox").style.display = "none";
+                document.getElementById("previewContainerCard").style.display = "block";
+                simulateUpload(file);
+            }
+        });
+
+        uploadBox.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = "#6f6eff";
+        });
+
+        uploadBox.addEventListener("dragleave", () => {
+            uploadBox.style.borderColor = "#4a4b5e";
+        });
+
+        uploadBox.addEventListener("drop", (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = "#4a4b5e";
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        browseButton.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", () => {
+            const files = fileInput.files;
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                // alert(`File uploaded: ${files[0].name}`);
+                // Add file preview functionality if needed
+            }
+        }
+
+        uploadBox.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        // fileInput.addEventListener("change", () => {
+        //     const file = fileInput.files[0];
+        //     if (file) {
+        //         const reader = new FileReader();
+        //         reader.onload = (e) => {
+        //             previewImage.src = e.target.result;
+        //         };
+        //         reader.readAsDataURL(file);
+
+        //         fileName.textContent = file.name;
+        //         fileSize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        //         previewContainer.style.display = "block";
+        //         uploadBox.style.display = "none";
+        //     }
+        // });
+
+        function uploadFile(file) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/upload-endpoint", true);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = `${percentComplete}%`;
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    progressContainer.style.display = "none";
+                    previewContainer.style.display = "block";
+                } else {
+                    // alert("Upload failed!");
+                }
+            };
+
+            const formData = new FormData();
+            formData.append("file", file);
+            xhr.send(formData);
+        }
+
+        document.getElementById("removeButton").addEventListener("click", () => {
+            document.getElementById("fileInput").value = "";
+            document.getElementById("previewImage").src = "";
+            document.getElementById("fileName").textContent = "";
+            document.getElementById("fileSize").textContent = "";
+            document.getElementById("previewContainer").style.display = "none";
+            document.getElementById("previewContainerCard").style.display = "none";
+            document.getElementById("uploadBox").style.display = "block";
+        });
+
+
+
+        var editor1cfg = {}
+        editor1cfg.toolbar = "basic";
+        var editor1 = new RichTextEditor("#inp_editor1", editor1cfg);
+    </script>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/Product/GetCategoryList", // Updated route to match controller
+                type: "GET",
+                success: function (categories) {
+                    var dropdown = $("#productCategory");
+                    dropdown.empty();
+                    dropdown.append('<option value="0">Select category</option>');
+
+                    $.each(categories, function (index, category) {
+                        dropdown.append(`<option value="${category.categoryId}">${category.categoryTitle}</option>`);
+                    });
+                },
+                error: function () {
+                    alert("Failed to load categories!");
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $("#productCategory").select2(); // Initialize Select2
+        });
+
+        // Initialize Tagify on the input field
+        document.addEventListener("DOMContentLoaded", function () {
+            var tagify = new Tagify(document.querySelector('#productTags'));
+
+            function updateTags() {
+                const values = tagify.value.map(x => x.value).join(','); // comma-separated string
+                document.querySelector('#productTagsHidden').value = values;
+            }
+
+            tagify.on('add', updateTags);
+            tagify.on('remove', updateTags);
+        });
+
+    </script>
+    <script>
+        let variantIndex = 0;
+
+        function createVariantRow(index) {
+            return `
+                        <div class="variant">
+                            <div class="col-md-3 mb-3">
+                                <label for="prodcutSize" class="form-label">Size</label>
+                                    <select name="Variants[${index}].VariantSize" class="form-select form-control">
+                                    <option value="0">Select Size</option>
+                                    <option value="1">S</option>
+                                    <option value="2">M</option>
+                                    <option value="3">L</option>
+                                    <option value="4">XL</option>
+                                    <option value="5">2XL</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                        <label for="productColor" class="form-label">Color</label>
+                                        <div class="color-picker-container">
+                                            <input name="Variants[${index}].VariantColorHex" type="text" id="hexInput" class="hex-input form-control"  value="#FF0000" readonly />
+                                            <input type="color" id="colorPicker" onchange="this.previousElementSibling.value = this.value" />
+                                </div>
+                            </div>
+                                    <div class="col-md-2.5">
+                                        <label for="txtProductQuantity" class="form-label">Quantity</label>
+                                                <input name="Variants[${index}].VariantQuantity" type="text" id="txtProductQuantity" placeholder="Enter quantity" class="form-control" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                        <label for="formFileMultiple" class="form-label">Photos</label>
+                                        <input name="Variants[${index}].Photos" class="form-control" type="file" id="formFileMultiple" multiple/>
+                            </div>
+                        </div>`;
+        }
+
+        document.getElementById('add-option-button').addEventListener('click', function () {
+            const container = document.getElementById('variants-container');
+            container.insertAdjacentHTML('beforeend', createVariantRow(variantIndex));
+            variantIndex++;
+        });
+
+        // Add one default row on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('add-option-button').click();
+        });
+    </script>
+}
+
+<style type="text/css">
+    .upload-container {
+        width: 100%;
+        /* max-width: 100%; */
+        margin: auto;
+        padding: 16px;
+        /* color: #fff; */
+        /* background-color: #1a1b26; */
+        border: 2px dashed #c0c0c4;
+        /* border-radius: 8px; */
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        position: relative;
+    }
+
+        .upload-container:hover {
+            border-color: #6f6eff;
+        }
+
+    .upload-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .upload-url {
+        float: right;
+        font-size: 14px;
+        color: #6f6eff;
+        text-decoration: none;
+    }
+
+        .upload-url:hover {
+            text-decoration: underline;
+        }
+
+    .upload-box {
+        /* border: 2px dashed #4a4b5e;
+                                                                border-radius: 8px; */
+        text-align: center;
+        padding: 32px;
+        cursor: pointer;
+        transition: border-color 0.3s;
+    }
+
+    /* .upload-box:hover {
+                                                                    border-color: #6f6eff;
+                                                                } */
+
+    .upload-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+        color: #6f6eff;
+    }
+
+    .upload-box p {
+        margin: 0;
+        font-size: 14px;
+        color: #ccc;
+    }
+
+    .upload-button {
+        background-color: #6f6eff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+        .upload-button:hover {
+            background-color: #5b5bf7;
+        }
+
+    .preview-container {
+        margin-top: 16px;
+    }
+
+    .image-preview {
+        display: flex;
+        align-items: center;
+        /* border: 1px solid #4a4b5e; */
+        padding: 8px;
+        border-radius: 8px;
+        /* background-color: #252839; */
+    }
+
+
+        .image-preview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+    .image-details p {
+        margin: 0;
+        font-size: 14px;
+        color: #323232;
+    }
+
+    .image-details .remove-button {
+        margin-top: 4px;
+        background-color: #ff4d4f;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+        .image-details .remove-button:hover {
+            background-color: #e04142;
+        }
+
+    /* Progress Bar Styling */
+    .progress-container {
+        width: 100%;
+        background-color: #4a4b5e;
+        border-radius: 8px;
+        height: 8px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        width: 0;
+        height: 100%;
+        background-color: #6f6eff;
+        transition: width 0.2s ease;
+    }
+
+    #previewContainerCard {
+        display: none;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-preview {
+        display: flex;
+        align-items: center;
+        background-color: #09134a;
+        border-radius: 8px;
+        padding: 8px;
+        justify-content: space-between;
+        margin-top: 16px;
+    }
+
+        .image-preview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+    .image-details p {
+        font-size: 14px;
+        color: #ccc;
+    }
+
+    .remove-button {
+        background-color: #ff4d4f;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+        .remove-button:hover {
+            background-color: #e04142;
+        }
+
+    .variants-section {
+        background-color: #2c2c54;
+        padding: 20px;
+        border-radius: 8px;
+        /* color: #fff; */
+    }
+
+    h3 {
+        margin-bottom: 15px;
+    }
+
+    .variant {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    /* .option-select, .option-input {
+                                                padding: 10px;
+                                                border: 1px solid #7c8cf0;
+                                                border-radius: 5px;
+                                                background-color: #1e1e2e;
+                                                color: #fff;
+                                                width: 100%;
+                                            } */
+
+    .add-option-btn {
+        background-color: #7c8cf0;
+        color: #fff;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .add-option-btn:hover {
+            background-color: #5363d1;
+        }
+
+    .color-picker-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .hex-input {
+        width: 100%;
+        padding-right: 40px;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        background: #fff;
+    }
+
+    #colorPicker {
+        position: absolute;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        border: none;
+        cursor: pointer;
+        opacity: 1;
+        border-radius: 4px;
+    }
+
+</style>
+<form asp-action="ProductForm" asp-controller="Product" method="post" enctype="multipart/form-data">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-6 row-gap-4">
+
+        <div class="d-flex flex-column justify-content-center">
+            <h4 class="mb-1 header">Add a new Product</h4>
+            <p class="mb-0">Orders placed across your store</p>
+        </div>
+        <div class="d-flex align-content-center flex-wrap gap-4">
+            <div class="d-flex gap-4">
+                <button type="reset" class="btn btn-secondary" fdprocessedid="1dpv5i">Discard</button>
+                <button class="btn btn-primary" fdprocessedid="ym9wu">Save draft</button>
+            </div>
+            <button type="submit" class="btn btn-primary" >Publish product</button>
+        </div>
+
+    </div>
+    <div class="container mt-4 p-0">
+        <div class="row gx-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <h5 class="card-header">Product Information</h5>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="productTitle" class="form-label">Name</label>
+                                <input type="text" class="form-control" asp-for="ProductName" id="productTitle" placeholder="Product title" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="productSKU" class="form-label">SKU</label>
+                                <input type="number" class="form-control" id="productSKU" placeholder="SKU" asp-for="ProductSKU" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="productBarcode" class="form-label">Barcode</label>
+                                <input type="text" class="form-control" id="productBarcode" placeholder="Product Barcode" asp-for="ProductBarcode" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="Description" class="form-label">Product Description</label>
+                                <textarea id="inp_editor1" class="form-control" placeholder="Product Discription" asp-for="ProductDescription">
+                        </textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card mt-4 d-none">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-header">Product Image</h5>
+                        <a href="#" class="upload-url align-self-center" style="padding:1.5rem;">Add media from URL</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="upload-container">
+                                <div class="upload-box" id="uploadBox">
+                                    <i class="upload-icon bx bx-upload"></i>
+                                    <p>Drag and drop your image here</p>
+                                    <p>or</p>
+                                    <button class="upload-button" id="browseButton">Browse image</button>
+                                    <input type="file" id="fileInput" accept="image/*" hidden />
+                                </div>
+
+                                <!-- Progress Bar -->
+                                <div class="progress-container" id="progressContainer" style="display: none;">
+                                    <div class="progress-bar" id="progressBar"></div>
+                                </div>
+
+                                <!-- Preview Section -->
+                                <div class="card" id="previewContainerCard">
+                                    <div class="card-body">
+                                        <div class="preview-container" id="previewContainer" style="display: none;">
+                                            <div class="image-preview">
+                                                <img id="previewImage" src="" alt="Preview" />
+                                                <div class="image-details">
+                                                    <p id="fileName">Filename.jpg</p>
+                                                    <p id="fileSize">0.0 MB</p>
+                                                    <button id="removeButton" class="remove-button">Remove file</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* <div class="card mt-4">
+                <div class="d-flex justify-content-between">
+                <h5 class="card-header">Variants</h5>
+                </div>
+                <div class="card-body" style="padding-top:0px !important;">
+                <div class="row">
+                <div id="variants-container">
+                <div class="variant">
+                <div class="col-md-3 mb-3">
+                <label for="prodcutSize" class="form-label">Size</label>
+                <select class="form-select form-control">
+                <option value="0">Select Size</option>
+                <option value="1">S</option>
+                <option value="2">M</option>
+                <option value="3">L</option>
+                <option value="4">XL</option>
+                <option value="5">2XL</option>
+                </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                <label for="productColor" class="form-label">Color</label>
+                <div class="color-picker-container">
+                <input type="text" id="hexInput" class="hex-input form-control" value="#FF0000" readonly>
+                <input type="color" id="colorPicker">
+                </div>
+                </div>
+                <div class="col-md-2.5">
+                <label for="txtProductQuantity" class="form-label">Quantity</label>
+                <input type="text" id="txtProductQuantity" placeholder="Enter quantity" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                <label for="formFileMultiple" class="form-label">Photos</label>
+                <input class="form-control" type="file" id="formFileMultiple" multiple>
+                </div>
+                </div>
+                </div>
+                <button id="add-option-button" class="add-option-btn">+ Add another option</button>
+                </div>
+                </div>
+                </div> *@
+                <div class="card mt-4">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-header">Variants</h5>
+                    </div>
+                    <div class="card-body" style="padding-top:0px !important;">
+                        <div class="row">
+                            <div id="variants-container">
+                                <!-- Variant rows will be inserted dynamically here -->
+                            </div>
+                            <button type="button" id="add-option-button" class="btn btn-secondary mt-3">+ Add another option</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-4">
+
+                <div class="card">
+                    <h5 class="card-header">Pricing</h5>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="pricing-container">
+                                <div class="pricing">
+                                    <div class="col-md-12 mb-5">
+                                        <label for="productPrice" class="form-label">Base Price</label>
+                                        <input type="number" class="form-control" id="productPrice" placeholder="Price" asp-for="ProductPrice" />
+                                    </div>
+                                    <div class="col-md-12 mb-5">
+                                        <label for="productDescountPrice" class="form-label">Discounted Price</label>
+                                        <input type="number" class="form-control" id="productDescountPrice" placeholder="Discounted Price" asp-for="ProductDiscountPrice"/>
+                                    </div>
+                                    <div class="form-check mb-5">
+                                        <input class="form-check-input" type="checkbox" id="chk_tax_in_product" checked asp-for="ProductChargeTax"/>
+                                        <label class="form-check-label" for="chk_tax_in_product">
+                                            Charge tax on this product
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch d-flex justify-content-between align-items-center border-top pt-2 px-0">
+                                        <label class="form-check-label" for="swtch_in_stock">In stock</label>
+                                        <input class="form-check-input" type="checkbox" id="swtch_in_stock" checked asp-for="ProductInStock">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <h5 class="card-header">Organize</h5>
+                    <div class="card-body">
+                        <div class="row">
+                            <div id="organize-container">
+                                <div class="organize">
+                                    <div class="col-md-12 mb-5">
+                                        <label for="productCategory" class="form-label">Category</label>
+                                        <select id="productCategory" class="form-control form-select form-select-lg select2" asp-for="CategoryId">
+                                            <option value="0">Select category status</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12 mb-5">
+                                        <label for="productStatus" class="form-label">Status</label>
+                                        <select id="productStatus" class="form-control form-select form-select-lg select2" asp-for="ProductStatus">
+                                            <option value="0">Select status</option>
+                                            <option value="1">Scheduled</option>
+                                            <option value="2">Publish</option>
+                                            <option value="3">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12 mb-5">
+                                        <label for="productTags" class="form-label">Tags</label>
+                                        <input id="productTags" class="form-control" placeholder="Add tags..."/>
+                                        <input type="hidden" id="productTagsHidden" name="ProductTags" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

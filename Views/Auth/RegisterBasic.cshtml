@@ -1,0 +1,72 @@
+@{
+  Layout = "_BlankLayout";
+  ViewData["Title"] = "Register Basic - Pages";
+}
+@model ECommerce_ERP.Models.RegisterViewModel
+@section PageStyles {
+<link rel="stylesheet" href="~/vendor/css/pages/page-auth.css">
+}
+
+@* ************** Content ************** *@
+
+<div class="container-xxl">
+  <div class="authentication-wrapper authentication-basic container-p-y">
+    <div class="authentication-inner">
+
+      <!-- Register Card -->
+      <div class="card px-sm-6 px-0">
+        <div class="card-body">
+          <!-- Logo -->
+          <div class="app-brand justify-content-center mb-6">
+            <a href="/" class="app-brand-link gap-2">
+              <span class="app-brand-logo demo">@await Html.PartialAsync("../_Partials/_Macros")</span>
+              <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
+            </a>
+          </div>
+          <!-- /Logo -->
+          <h4 class="mb-1">Adventure starts here 🚀</h4>
+          <p class="mb-6">Make your app management easy and fun!</p>
+
+                    <form asp-action="RegisterBasic" method="post">
+                        <div class="mb-6">
+                            <label asp-for="UserName" class="form-label"></label>
+                            <input asp-for="UserName" class="form-control" placeholder="Enter your username" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="UserEmail" class="form-label"></label>
+                            <input asp-for="UserEmail" class="form-control" placeholder="Enter your email" />
+                            <span asp-validation-for="UserEmail" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6 form-password-toggle">
+                            <label asp-for="UserPassword" class="form-label"></label>
+                            <div class="input-group input-group-merge">
+                                <input asp-for="UserPassword" class="form-control" placeholder="********" />
+                                <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                            </div>
+                            <span asp-validation-for="UserPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm your password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <button class="btn btn-primary d-grid w-100" type="submit">Sign up</button>
+                    </form>
+
+          <p class="text-center">
+            <span>Already have an account?</span>
+            <a href="/Auth/LoginBasic">
+              <span>Sign in instead</span>
+            </a>
+          </p>
+        </div>
+      </div>
+      <!-- Register Card -->
+    </div>
+  </div>
+</div>
